@@ -111,7 +111,7 @@ def mpe(kernel,N,M,nu,epsilon=0.04,lambda_upper_bound=8.):
     dist_diff = np.concatenate((np.ones((N, 1)) / N, -1 * np.ones((M,1)) / M))
     distribution_RKHS_distance = sqrt(np.dot(dist_diff.T, 
                                     np.dot(kernel, dist_diff))[0,0])
-    lambda_left=2.  # HEURISTICS
+    lambda_left=2.  # N.B. heuristics added for SU class-prior estimation
     lambda_right=lambda_upper_bound        
     while lambda_right-lambda_left>epsilon:
         lambda_value=(lambda_left+lambda_right)/2.        
