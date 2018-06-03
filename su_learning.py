@@ -26,9 +26,17 @@ class SU_Base(BaseEstimator, ClassifierMixin):
 
     def score(self, x, y):
         x_s, x_u = x[y == 1, :], x[y == 0, :]
-        return estimate_risk(x_s, x_u, self.predict, self.prior)
+        f = self.predict
+        p_p = self.prior
+        p_n = 1 - self.prior
+
+        # SU risk estimator with zero-one loss
+        r_s = (np.sign(-f(x_s)) - np.sign(f(x_s))) * p_p / (p_p - p_n)
+        r_u = (-p_n * (1 - np.sign(f(x_u))) + p_p * (1 - np.sign(-f(x_u)))) / (p_p - p_n)
+        return r_s.mean() + r_u.mean()
 
     def _basis(self, x):
+        # linear basis
         return np.hstack((x, np.ones((len(x), 1))))
 
 
@@ -48,7 +56,7 @@ class SU_SL(SU_Base):
         d = k_u.shape[1]
 
         A = (p_p - p_n) / n_u * (k_u.T.dot(k_u) + 2 * self.lam * n_u * np.eye(d))
-        b = (2 * p_s / n_s * k_s.T.dot(np.ones((n_s, 1))) - 1 / n_u * k_u.T.dot(np.ones((n_u, 1))))
+        b = 2 * p_s * k_s.T.mean(axis=1) - k_u.T.mean(axis=1)
         self.coef_ = np.linalg.solve(A, b)
 
         return self
@@ -105,13 +113,6 @@ def class_prior_estimation(DS, DU):
     km1, km2 = wrapper(DU, DS.reshape(-1, DS.shape[1]//2))
     prior_p = km2
     return 0.5 * (np.sqrt(2 * prior_p - 1) + 1)
-
-
-def estimate_risk(x_s, x_u, f, prior):
-    # SU risk estimator with zero-one loss
-    r_s = (np.sign(-f(x_s)) - np.sign(f(x_s))) * prior / (2 * prior - 1)
-    r_u = (-(1 - prior) * (1 - np.sign(f(x_u))) + prior * (1 - np.sign(-f(x_u)))) / (2 * prior - 1)
-    return r_s.mean() + r_u.mean()
 
 
 def main(loss_name, prior=0.7, n_s=500, n_u=500, end_to_end=False):
