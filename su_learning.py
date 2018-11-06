@@ -29,9 +29,10 @@ class SU_Base(BaseEstimator, ClassifierMixin):
         f = self.predict
         p_p = self.prior
         p_n = 1 - self.prior
+        p_s = p_p ** 2 + p_n ** 2
 
         # SU risk estimator with zero-one loss
-        r_s = (np.sign(-f(x_s)) - np.sign(f(x_s))) * p_p / (p_p - p_n)
+        r_s = (np.sign(-f(x_s)) - np.sign(f(x_s))) * p_s / (p_p - p_n)
         r_u = (-p_n * (1 - np.sign(f(x_u))) + p_p * (1 - np.sign(-f(x_u)))) / (p_p - p_n)
         return r_s.mean() + r_u.mean()
 
