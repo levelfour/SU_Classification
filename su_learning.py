@@ -34,7 +34,11 @@ class SU_Base(BaseEstimator, ClassifierMixin):
         # SU risk estimator with zero-one loss
         r_s = (np.sign(-f(x_s)) - np.sign(f(x_s))) * p_s / (p_p - p_n)
         r_u = (-p_n * (1 - np.sign(f(x_u))) + p_p * (1 - np.sign(-f(x_u)))) / (p_p - p_n)
-        return r_s.mean() + r_u.mean()
+        risk = r_s.mean() + r_u.mean()
+
+        # makes higher score means good performance
+        score = np.maximum(0, 1 - risk)
+        return score
 
     def _basis(self, x):
         # linear basis
