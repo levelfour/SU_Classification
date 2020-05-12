@@ -60,6 +60,12 @@ class SU_SL(SU_Base):
         k_u = self._basis(x_u)
         d = k_u.shape[1]
 
+        """
+        Note that `2 *` is needed for `b` while this coefficient does not seem
+        appear in the original paper at a glance.
+        This is because `k_s.T.mean` takes mean over `2 * n_s` entries,
+        while the division is taken with `n_s` in the original paper.
+        """
         A = (p_p - p_n) / n_u * (k_u.T.dot(k_u) + 2 * self.lam * n_u * np.eye(d))
         b = 2 * p_s * k_s.T.mean(axis=1) - k_u.T.mean(axis=1)
         self.coef_ = np.linalg.solve(A, b)
